@@ -1,5 +1,6 @@
 import torch
 import syft as sy
+from syft.core.frameworks.torch import _GeneralizedPointerTensor
 
 BASE = 2
 KAPPA = 3  # ~29 bits
@@ -51,7 +52,7 @@ def swap_shares(shares):
     new_alice.send(bob)
     new_bob.send(alice)
 
-    return sy.core.frameworks.torch.tensor._GeneralizedPointerTensor({alice:new_bob,bob:new_alice}).on(sy.LongTensor([]))
+    return _GeneralizedPointerTensor({alice:new_bob,bob:new_alice}).on(sy.LongTensor([]))
 
 
 def truncate(x, interface, amount=PRECISION_FRACTIONAL, mod=field):
@@ -100,8 +101,10 @@ def spdz_mul(x, y, workers, mod=field):
          + ((epsilon * delta) % mod) / n
          ) % mod
 
+    print(type(z))
+
     # we assume we need to mask the result for a third party crypto provider
-    u = generate_zero_shares_communication(workers, *share.shape)
+    u = generate_zero_shares_communication(workers, *shape)
     return spdz_add(z, u)
 
 
@@ -198,11 +201,11 @@ def generate_mul_triple_communication(shape, workers):
 
 def generate_zero_shares_communication(workers, *sizes):
     alice, bob = workers
-    zeros = torch.zeros(*sizes)
+    zeros = torch.zeros(*sizes).long()
     u_alice, u_bob = share(zeros)
     u_alice.send(alice)
     u_bob.send(bob)
-    u_gp = sy.core.frameworks.torch.tensor._GeneralizedPointerTensor({alice: u_alice.child, bob: u_bob.child})
+    u_gp = _GeneralizedPointerTensor({alice: u_alice.child, bob: u_bob.child})
     return u_gp
 
 

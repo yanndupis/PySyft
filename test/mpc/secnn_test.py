@@ -3,6 +3,7 @@ import syft as sy
 from syft.mpc import spdz
 from syft.mpc.securenn import decompose, select_shares, private_compare
 from syft.core.frameworks.torch.tensor import _GeneralizedPointerTensor, _MPCTensor
+from .mpc_tensor import _generate_mpc_number_pair
 
 import unittest
 import numpy as np
@@ -24,17 +25,7 @@ class TestSecureNN(unittest.TestCase):
         self.alice.add_workers([me, self.bob])
 
     def generate_mpc_number_pair(self, n1, n2):
-        mpcs = []
-        for i in [n1, n2]:
-            x = torch.FloatTensor([i])
-            enc = spdz.encode(x)
-            x_alice, x_bob = spdz.share(enc)
-            x_alice.send(self.alice)
-            x_bob.send(self.bob)
-            x_pointer_tensor_dict = {self.alice: x_alice.child, self.bob: x_bob.child}
-            x_gp = _GeneralizedPointerTensor(x_pointer_tensor_dict).on(x)
-            mpcs.append(_MPCTensor(x_gp))
-        return mpcs
+        return _generate_mpc_number_pair(self, n1, n2)
 
     def prep_decompose(self, *shape):
         x = np.random.choice(spdz.field - 1, shape)
