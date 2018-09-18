@@ -1,6 +1,6 @@
 import torch
 import syft as sy
-from ..core.frameworks.torch.tensor import _GeneralizedPointerTensor
+
 BASE = 2
 KAPPA = 3  # ~29 bits
 
@@ -51,7 +51,7 @@ def swap_shares(shares):
     new_alice.send(bob)
     new_bob.send(alice)
 
-    return _GeneralizedPointerTensor({alice:new_bob,bob:new_alice}).on(sy.LongTensor([]))
+    return sy.core.frameworks.torch.tensor._GeneralizedPointerTensor({alice:new_bob,bob:new_alice}).on(sy.LongTensor([]))
 
 
 def truncate(x, interface, amount=PRECISION_FRACTIONAL, mod=field):
@@ -202,7 +202,7 @@ def generate_zero_shares_communication(workers, *sizes):
     u_alice, u_bob = share(zeros)
     u_alice.send(alice)
     u_bob.send(bob)
-    u_gp = _GeneralizedPointerTensor({alice: u_alice.child, bob: u_bob.child})
+    u_gp = sy.core.frameworks.torch.tensor._GeneralizedPointerTensor({alice: u_alice.child, bob: u_bob.child})
     return u_gp
 
 
