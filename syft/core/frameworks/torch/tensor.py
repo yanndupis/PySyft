@@ -571,7 +571,7 @@ class _GeneralizedPointerTensor(_SyftTensor):
              key = worker if isinstance(worker, (int, str)) else worker.id
              pointer_dict[key] = pointer
          self.pointer_tensor_dict = pointer_dict
-    
+
     @classmethod
     def handle_call(cls, syft_command, owner):
         syft_commands = torch_utils.split_to_pointer_commands(syft_command)
@@ -1165,4 +1165,3 @@ class _TorchVariable(_TorchObject):
 
         # put back original var_grad.data
         self.grad.data = var_grad_data
-

@@ -81,7 +81,7 @@ def spdz_mul(x, y, workers, mod=field):
         raise ValueError()
     shape = x.shape
     alice, bob = workers
-    triple = generate_mul_triple_communication(shape, alice, bob)
+    triple = generate_mul_triple_communication(shape, workers)
     a, b, c = triple
 
     d = (x - a) % mod
@@ -99,7 +99,10 @@ def spdz_mul(x, y, workers, mod=field):
          + (epsilon * a) % mod
          + ((epsilon * delta) % mod) / n
          ) % mod
-    return z
+
+    # we assume we need to mask the result for a third party crypto provider
+    u = generate_zero_shares_communication(workers, *share.shape)
+    return spdz_add(z, u)
 
 
 def spdz_matmul(x, y, interface, mod=field):
@@ -169,30 +172,32 @@ def generate_mul_triple(shape, mod=field):
     return r, s, t
 
 
-def generate_mul_triple_communication(shape, alice, bob):
-        r, s, t = generate_mul_triple(shape)
+def generate_mul_triple_communication(shape, workers):
+    alice, bob = workers
+    r, s, t = generate_mul_triple(shape)
 
-        r_alice, r_bob = share(r)
-        s_alice, s_bob = share(s)
-        t_alice, t_bob = share(t)
+    r_alice, r_bob = share(r)
+    s_alice, s_bob = share(s)
+    t_alice, t_bob = share(t)
 
-        r_alice.send(alice)
-        r_bob.send(bob)
+    r_alice.send(alice)
+    r_bob.send(bob)
 
-        s_alice.send(alice)
-        s_bob.send(bob)
+    s_alice.send(alice)
+    s_bob.send(bob)
 
-        t_alice.send(alice)
-        t_bob.send(bob)
+    t_alice.send(alice)
+    t_bob.send(bob)
 
-        gp_r = _GeneralizedPointerTensor({alice: r_alice.child, bob: r_bob.child}).on(r)
-        gp_s = _GeneralizedPointerTensor({alice: s_alice.child, bob: s_bob.child}).on(s)
-        gp_t = _GeneralizedPointerTensor({alice: t_alice.child, bob: t_bob.child}).on(t)
-        triple = [gp_r, gp_s, gp_t]
-        return triple
+    gp_r = _GeneralizedPointerTensor({alice: r_alice.child, bob: r_bob.child}).on(r)
+    gp_s = _GeneralizedPointerTensor({alice: s_alice.child, bob: s_bob.child}).on(s)
+    gp_t = _GeneralizedPointerTensor({alice: t_alice.child, bob: t_bob.child}).on(t)
+    triple = [gp_r, gp_s, gp_t]
+    return triple
 
 
-def generate_zero_shares_communication(alice, bob, *sizes):
+def generate_zero_shares_communication(workers, *sizes):
+    alice, bob = workers
     zeros = torch.zeros(*sizes)
     u_alice, u_bob = share(zeros)
     u_alice.send(alice)

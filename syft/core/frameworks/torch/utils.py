@@ -654,5 +654,3 @@ def is_variable(obj):
         if isinstance(obj, tuple(torch.var_types)):
             return True
     return False
-
-
