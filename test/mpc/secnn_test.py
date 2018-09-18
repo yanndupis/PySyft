@@ -2,8 +2,9 @@
 import syft as sy
 from syft.mpc import spdz
 from syft.mpc.securenn import decompose, select_shares, private_compare
-from syft.core.frameworks.torch.tensor import _GeneralizedPointerTensor, _MPCTensor
-from .mpc_tensor import _generate_mpc_number_pair
+from syft.core.frameworks.torch.tensor import _GeneralizedPointerTensor
+from syft.core.frameworks.torch.mpc_tensor import _MPCTensor
+from syft.mpc.test_utils import _generate_mpc_number_pair
 
 import unittest
 import numpy as np
