@@ -837,6 +837,16 @@ class BaseWorker(ABC):
         Transmit the call to the appropriate TensorType for handling
         """
 
+        # if this is none - then it means that self_ is not a torch wrapper
+        # and we need to execute one level higher
+        if(self_ is not None):
+            if(self_.child is None):
+                new_args = list()
+                for arg in args:
+                    if(torch_utils.is_syft_tensor(arg)):
+                        new_args.append(arg.wrap(True))
+                return self._execute_call(attr, self_.wrap(True), *new_args, **kwargs)
+
         # Distinguish between a command with torch tensors (like when called by the client,
         # or received from another worker), and a command with syft tensor, which can occur
         # when a function is overloaded by a SyftTensor (for instance _PlusIsMinusTensor
@@ -877,6 +887,7 @@ class BaseWorker(ABC):
         # Note: because we have pb of registration of tensors with the right worker,
         # and because having Virtual workers creates even more ambiguity, we specify the worker
         # performing the operation
+
         result = child_type.handle_call(syft_command, owner=self)
 
         torch_utils.enforce_owner((raw_command, result), self)
